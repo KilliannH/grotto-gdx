@@ -12,6 +12,6 @@ public class DesktopLauncher {
 		config.setForegroundFPS(60);
 		config.useVsync(true);
 		config.setTitle("grotto-gdx-game");
-		new Lwjgl3Application(new GrottoGdxGame(), config);
+		new Lwjgl3Application(new DropGame(), config);
 	}
 }
