@@ -2,7 +2,6 @@ package com.gdx.game;
 
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Application;
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration;
-import com.gdx.game.GrottoGdxGame;
 
 // Please note that on macOS your application needs to be started with the -XstartOnFirstThread JVM argument
 public class DesktopLauncher {
@@ -12,6 +11,6 @@ public class DesktopLauncher {
 		config.setForegroundFPS(60);
 		config.useVsync(true);
 		config.setTitle("grotto-gdx-game");
-		new Lwjgl3Application(new DropGame(), config);
+		new Lwjgl3Application(new Grotto(), config);
 	}
 }
