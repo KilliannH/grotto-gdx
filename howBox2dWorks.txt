@@ -1,0 +1,13 @@
+Box 2D provides a world witch can have bodies and each bodies can interact with physics like mass, velocity..etc
+
+world
+    bodies
+        mass
+        velocity
+        location
+        angles
+        fixtures
+            shape
+            density
+            friction
+            restitution

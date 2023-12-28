@@ -7,9 +7,21 @@ import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.maps.MapObject;
+import com.badlogic.gdx.maps.objects.RectangleMapObject;
+import com.badlogic.gdx.maps.tiled.TiledMap;
+import com.badlogic.gdx.maps.tiled.TmxMapLoader;
+import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.physics.box2d.Body;
+import com.badlogic.gdx.physics.box2d.BodyDef;
+import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
+import com.badlogic.gdx.physics.box2d.FixtureDef;
+import com.badlogic.gdx.physics.box2d.PolygonShape;
+import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.TimeUtils;
@@ -22,8 +34,17 @@ public class PlayScreen implements Screen {
     final Grotto game;
     private OrthographicCamera gameCam;
     private Viewport viewport;
-
     private Hud hud;
+
+    // Tiled map variables
+    private TmxMapLoader mapLoader;
+    private TiledMap map;
+    private OrthogonalTiledMapRenderer renderer;
+
+    // Box2d variables
+    private World world;
+    private Box2DDebugRenderer b2dr;
+
 
     public PlayScreen(final Grotto game) {
         this.game = game;
@@ -31,19 +52,52 @@ public class PlayScreen implements Screen {
         gameCam = new OrthographicCamera();
         viewport = new FitViewport(Grotto.V_WIDTH, Grotto.V_HEIGHT, gameCam);
         hud = new Hud(game.batch, game.font);
+
+        mapLoader = new TmxMapLoader();
+        map = mapLoader.load("lvl1.tmx");
+        renderer = new OrthogonalTiledMapRenderer(map);
+        gameCam.position.set(viewport.getWorldWidth() / 2, viewport.getWorldHeight() / 2, 0);
+
+        world = new World(new Vector2(0, 0), true);
+        b2dr = new Box2DDebugRenderer();
+
+        // will move in another class later
+        BodyDef bdef = new BodyDef();
+        PolygonShape shape = new PolygonShape();
+        FixtureDef fdef = new FixtureDef();
+        Body body;
+
+        // create ground bodies/fixtures
+        for(RectangleMapObject object : map.getLayers().get(2).getObjects().getByType(RectangleMapObject.class)) {
+            Rectangle rect = object.getRectangle();
+
+            bdef.type = BodyDef.BodyType.StaticBody;
+            bdef.position.set(rect.getX() + rect.getWidth() / 2, rect.getY() + rect.getHeight() / 2);
+
+            body = world.createBody(bdef);
+            shape.setAsBox(rect.getWidth()  / 2, rect.getHeight() / 2);
+            fdef.shape = shape;
+            body.createFixture(fdef);
+        }
     }
 
     @Override
     public void render(float delta) {
-        // clear to black
+        // separate our update logic from render
+        update(delta);
+
+        // clear the game screen with black
         ScreenUtils.clear(0, 0, 0, 1);
 
-        // tell the SpriteBatch to render in the
-        // coordinate system specified by the camera.
+        // render our game map
+        renderer.render();
+
+        // render our Box2DDebugLines
+        b2dr.render(world, gameCam.combined);
+
+        // Set our batch to now draw what the Hud camera sees.
         game.batch.setProjectionMatrix(hud.stage.getCamera().combined);
         hud.stage.draw();
-        // begin a new batch and draw the bucket and
-        // all drops
     }
 
     @Override
@@ -54,6 +108,18 @@ public class PlayScreen implements Screen {
     @Override
     public void show() {
         // start the playback of the background music
+    }
+
+    public void handleInput(float dt) {
+        if(Gdx.input.isTouched()) {
+            gameCam.position.x += 100 * dt;
+        }
+    }
+
+    public void update(float dt) {
+        handleInput(dt);
+        gameCam.update();
+        renderer.setView(gameCam);
     }
 
     @Override
