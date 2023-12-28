@@ -1,30 +1,21 @@
 package com.gdx.game.screens;
 
-import java.util.Iterator;
-
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.maps.MapObject;
 import com.badlogic.gdx.maps.objects.RectangleMapObject;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
-import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.PolygonShape;
 import com.badlogic.gdx.physics.box2d.World;
-import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ScreenUtils;
-import com.badlogic.gdx.utils.TimeUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.gdx.game.Grotto;
@@ -39,7 +30,7 @@ public class PlayScreen implements Screen {
     // Tiled map variables
     private TmxMapLoader mapLoader;
     private TiledMap map;
-    private OrthogonalTiledMapRenderer renderer;
+    private OrthogonalTiledMapRenderer mapRenderer;
 
     // Box2d variables
     private World world;
@@ -55,7 +46,7 @@ public class PlayScreen implements Screen {
 
         mapLoader = new TmxMapLoader();
         map = mapLoader.load("lvl1.tmx");
-        renderer = new OrthogonalTiledMapRenderer(map);
+        mapRenderer = new OrthogonalTiledMapRenderer(map);
         gameCam.position.set(viewport.getWorldWidth() / 2, viewport.getWorldHeight() / 2, 0);
 
         world = new World(new Vector2(0, 0), true);
@@ -90,7 +81,7 @@ public class PlayScreen implements Screen {
         ScreenUtils.clear(0, 0, 0, 1);
 
         // render our game map
-        renderer.render();
+        mapRenderer.render();
 
         // render our Box2DDebugLines
         b2dr.render(world, gameCam.combined);
@@ -119,7 +110,7 @@ public class PlayScreen implements Screen {
     public void update(float dt) {
         handleInput(dt);
         gameCam.update();
-        renderer.setView(gameCam);
+        mapRenderer.setView(gameCam);
     }
 
     @Override
