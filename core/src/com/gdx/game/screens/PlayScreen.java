@@ -22,6 +22,7 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 import com.gdx.game.Grotto;
 import com.gdx.game.scenes.Hud;
 import com.gdx.game.sprites.Hero;
+import com.gdx.game.tools.B2WorldCreator;
 
 public class PlayScreen implements Screen {
     final Grotto game;
@@ -56,26 +57,10 @@ public class PlayScreen implements Screen {
         world = new World(new Vector2(0, -10), true);
         b2dr = new Box2DDebugRenderer();
 
+        new B2WorldCreator(world, map);
+
+        // create hero in our game world
         player = new Hero(world);
-
-        // will move in another class later
-        BodyDef bdef = new BodyDef();
-        PolygonShape shape = new PolygonShape();
-        FixtureDef fdef = new FixtureDef();
-        Body body;
-
-        // create ground bodies/fixtures
-        for(RectangleMapObject object : map.getLayers().get(2).getObjects().getByType(RectangleMapObject.class)) {
-            Rectangle rect = object.getRectangle();
-
-            bdef.type = BodyDef.BodyType.StaticBody;
-            bdef.position.set((rect.getX() + rect.getWidth() / 2) / Grotto.PPM, (rect.getY() + rect.getHeight() / 2) / Grotto.PPM);
-
-            body = world.createBody(bdef);
-            shape.setAsBox((rect.getWidth()  / 2) / Grotto.PPM, (rect.getHeight() / 2) / Grotto.PPM);
-            fdef.shape = shape;
-            body.createFixture(fdef);
-        }
     }
 
     @Override
@@ -144,5 +129,10 @@ public class PlayScreen implements Screen {
 
     @Override
     public void dispose() {
+        map.dispose();
+        mapRenderer.dispose();
+        world.dispose();
+        b2dr.dispose();
+        hud.dispose();
     }
 }
