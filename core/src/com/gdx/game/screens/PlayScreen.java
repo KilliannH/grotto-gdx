@@ -1,6 +1,7 @@
 package com.gdx.game.screens;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.maps.objects.RectangleMapObject;
@@ -20,6 +21,7 @@ import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.gdx.game.Grotto;
 import com.gdx.game.scenes.Hud;
+import com.gdx.game.sprites.Hero;
 
 public class PlayScreen implements Screen {
     final Grotto game;
@@ -36,21 +38,25 @@ public class PlayScreen implements Screen {
     private World world;
     private Box2DDebugRenderer b2dr;
 
+    private Hero player;
+
 
     public PlayScreen(final Grotto game) {
         this.game = game;
 
         gameCam = new OrthographicCamera();
-        viewport = new FitViewport(Grotto.V_WIDTH, Grotto.V_HEIGHT, gameCam);
+        viewport = new FitViewport(Grotto.V_WIDTH / Grotto.PPM, Grotto.V_HEIGHT / Grotto.PPM, gameCam);
         hud = new Hud(game.batch, game.font);
 
         mapLoader = new TmxMapLoader();
         map = mapLoader.load("lvl1.tmx");
-        mapRenderer = new OrthogonalTiledMapRenderer(map);
+        mapRenderer = new OrthogonalTiledMapRenderer(map, 1 / Grotto.PPM);
         gameCam.position.set(viewport.getWorldWidth() / 2, viewport.getWorldHeight() / 2, 0);
 
-        world = new World(new Vector2(0, 0), true);
+        world = new World(new Vector2(0, -10), true);
         b2dr = new Box2DDebugRenderer();
+
+        player = new Hero(world);
 
         // will move in another class later
         BodyDef bdef = new BodyDef();
@@ -63,10 +69,10 @@ public class PlayScreen implements Screen {
             Rectangle rect = object.getRectangle();
 
             bdef.type = BodyDef.BodyType.StaticBody;
-            bdef.position.set(rect.getX() + rect.getWidth() / 2, rect.getY() + rect.getHeight() / 2);
+            bdef.position.set((rect.getX() + rect.getWidth() / 2) / Grotto.PPM, (rect.getY() + rect.getHeight() / 2) / Grotto.PPM);
 
             body = world.createBody(bdef);
-            shape.setAsBox(rect.getWidth()  / 2, rect.getHeight() / 2);
+            shape.setAsBox((rect.getWidth()  / 2) / Grotto.PPM, (rect.getHeight() / 2) / Grotto.PPM);
             fdef.shape = shape;
             body.createFixture(fdef);
         }
@@ -102,13 +108,24 @@ public class PlayScreen implements Screen {
     }
 
     public void handleInput(float dt) {
-        if(Gdx.input.isTouched()) {
-            gameCam.position.x += 100 * dt;
+        if(Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {
+            player.b2body.applyLinearImpulse(new Vector2(0, 3f), player.b2body.getWorldCenter(), true);
+        }
+        if(Gdx.input.isKeyPressed(Input.Keys.RIGHT) && player.b2body.getLinearVelocity().x <= 2) {
+            player.b2body.applyLinearImpulse(new Vector2(0.1f, 0), player.b2body.getWorldCenter(), true);
+        }
+        if(Gdx.input.isKeyPressed(Input.Keys.LEFT) && player.b2body.getLinearVelocity().x >= -2) {
+            player.b2body.applyLinearImpulse(new Vector2(-0.1f, 0), player.b2body.getWorldCenter(), true);
         }
     }
 
     public void update(float dt) {
         handleInput(dt);
+
+        world.step(1/60f, 6, 2);
+
+        gameCam.position.x = player.b2body.getPosition().x;
+
         gameCam.update();
         mapRenderer.setView(gameCam);
     }
